@@ -4,6 +4,7 @@
 
 #include "ofMatrix4x4.h"
 #include "ofConstants.h"
+#include "ofFileUtils.h"
 
 #include <limits>
 #include <stdlib.h>
@@ -1541,6 +1542,26 @@ void ofMatrix4x4::decompose( ofVec3f& t,
     so.set(parts.u.x(), parts.u.y(), parts.u.z(), parts.u.w());
 }
 
+void ofMatrix4x4::writeToFile(const std::string & path)
+{
+   ofFile matBuffer;
+   matBuffer.open(path, ofFile::WriteOnly, false);
+   std::string floatString;
+   for (int row = 0; row < 4; row++) {
+       ofVec4f rowValue = _mat[row];
+       floatString.append(std::to_string(rowValue.x));
+       floatString.append(" ");
+       floatString.append(std::to_string(rowValue.y));
+       floatString.append(" ");
+       floatString.append(std::to_string(rowValue.z));
+       floatString.append(" ");
+       floatString.append(std::to_string(rowValue.w));
+       floatString.append(" ");
+   }
+   matBuffer << floatString;
+   matBuffer << std::endl;
+   matBuffer.close();
+}
 #undef SET_ROW
 
 std::ostream& operator<<(std::ostream& os, const ofMatrix4x4& M) {

@@ -10,7 +10,10 @@ enum ofWindowMode{
 	/// \brief A fullscreen application window.
 	OF_FULLSCREEN 	= 1,
 	/// \brief A fullscreen application window with a custom width and height.
-	OF_GAME_MODE	= 2
+	OF_GAME_MODE	  = 2,
+	OF_WINDOW_PBUFFER = 3,
+	OF_WINDOW_EGL_OS  = 4,
+	OF_WINDOW_MESA    = 5,
 };
 
 

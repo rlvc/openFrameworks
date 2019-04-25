@@ -158,6 +158,7 @@ public:
 	void readToPixels(ofPixels & pixels, int attachmentPoint = 0) const;
 	void readToPixels(ofShortPixels & pixels, int attachmentPoint = 0) const;
 	void readToPixels(ofFloatPixels & pixels, int attachmentPoint = 0) const;
+	void readDepthToPixels(ofFloatPixels & pixels) const;
 
 #ifndef TARGET_OPENGLES
 	/// \brief Copy the fbo to an ofBufferObject.

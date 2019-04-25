@@ -993,6 +993,14 @@ void ofPixels_<PixelType>::setNumChannels(size_t numChannels){
 }
 
 template<typename PixelType>
+void ofPixels_<PixelType>::writeToFile(const std::string & path)
+{
+	ofFile colorBuffer;
+	colorBuffer.open(path, ofFile::WriteOnly, true);
+	colorBuffer.write((char*)pixels, sizeof(PixelType) * pixelsSize);
+	colorBuffer.close();
+}
+template<typename PixelType>
 size_t ofPixels_<PixelType>::size() const{
 	return pixelsSize;
 }

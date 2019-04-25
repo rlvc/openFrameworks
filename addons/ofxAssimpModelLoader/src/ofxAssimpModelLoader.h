@@ -112,6 +112,7 @@ class ofxAssimpModelLoader{
         void calculateDimensions();
 
 		const aiScene * getAssimpScene();
+        void getBoundingBox(ofPoint& min, ofPoint& max);
          
     protected:
         void updateAnimations();

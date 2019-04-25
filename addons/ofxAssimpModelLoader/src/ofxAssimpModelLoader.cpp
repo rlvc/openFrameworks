@@ -497,7 +497,7 @@ void ofxAssimpModelLoader::updateGLResources(){
 void ofxAssimpModelLoader::updateModelMatrix() {
     modelMatrix.makeIdentityMatrix();
     modelMatrix.glTranslate(pos);
-    modelMatrix.glRotate(180, 0, 0, 1);
+    //modelMatrix.glRotate(180, 0, 0, 1);
     if(normalizeScale) {
         modelMatrix.glScale(normalizedScale , normalizedScale, normalizedScale);
     }
@@ -1004,6 +1004,17 @@ const aiScene* ofxAssimpModelLoader::getAssimpScene(){
 	return scene.get();
 }
 
+void ofxAssimpModelLoader::getBoundingBox(ofPoint & min, ofPoint & max)
+{
+   aiVector3D minV, maxV;
+   getBoundingBoxWithMinVector(&minV, &maxV);
+   min.x = minV.x;
+   min.y = minV.y;
+   min.z = minV.z;
+   max.x = maxV.x;
+   max.y = maxV.y;
+   max.z = maxV.z;
+}
 //--------------------------------------------------------------
 void ofxAssimpModelLoader::enableTextures(){
 	bUsingTextures = true;

@@ -450,7 +450,7 @@ public:
 	/// \brief Makes a new matrix which is the given matrix, normalized.
 	inline static ofMatrix4x4 getOrthoNormalOf(const ofMatrix4x4& matrix);
 
-
+    void ofMatrix4x4::writeToFile(const std::string & path);
 	/// \}
 
 	//---------------------

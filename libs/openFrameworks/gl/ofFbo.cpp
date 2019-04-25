@@ -535,7 +535,7 @@ void ofFbo::allocate(int width, int height, int internalformat, int numSamples) 
     settings.textureTarget	= GL_TEXTURE_2D;
 #else
 	settings.useDepth		= true;
-	settings.useStencil		= true;
+	settings.useStencil		= false;
 	//we do this as the fbo and the settings object it contains could be created before the user had the chance to disable or enable arb rect. 	
     settings.textureTarget	= ofGetUsingArbTex() ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;    
 #endif 
@@ -1086,6 +1086,15 @@ void ofFbo::readToPixels(ofFloatPixels & pixels, int attachmentPoint) const{
 #endif
 }
 
+void ofFbo::readDepthToPixels(ofFloatPixels & pixels) const
+{
+	if (!bIsAllocated) return;
+	pixels.allocate(settings.width, settings.height, ofGetImageTypeFromGLType(settings.depthStencilInternalFormat));
+	bind();
+	int format = ofGetGLFormatFromInternal(settings.depthStencilInternalFormat);
+	glReadPixels(0, 0, settings.width, settings.height, format, GL_FLOAT, pixels.getData());
+	unbind();
+}
 #ifndef TARGET_OPENGLES
 //----------------------------------------------------------
 void ofFbo::copyTo(ofBufferObject & buffer) const{
