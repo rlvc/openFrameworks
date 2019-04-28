@@ -1,0 +1,29 @@
+refer to the path of openFrameworks as OF_PATH
+
+1. DOWNLOAD LIBS
+	cd %OF_PATH%\scripts\vs
+	.\download_libs.psl
+		# You may override default parameters for this script by specifying 
+		#       -paramName paramValue
+		# When calling this script. For example: 
+		#       download_libs.ps1 -platform vs2015
+		# Which will load the visual studio 2015 libraries
+		
+2. COMPILE COMMANDLINE
+	cd %OF_PATH%\apps\projectGenerator\commandLine\
+	open commandLine.sln with corresponding vs platform
+	MAYBE need to "Reset Solution Target" for your WIN SDK VERSION
+	generator the solution commandLine
+
+3. GENERATOR TRAING CODE
+	cd %OF_PATH%\apps\projectGenerator\commandLine\bin\
+	.\commandLine.exe -a"ofxAssimpModelLoader" ..\..\..\myApps\TEST
+		# the last arg (..\..\..\myApps\TEST) is the path for your project, refer to it as PROJECT_PATH  
+	COPY the files in %OF_PATH%\apps\src to %PROJECT_PATH%\src
+	OK!!!!!
+	
+4. run the code
+	show a demo here
+	COPY the train data in %OF_PATH%\apps\data to %PROJECT_PATH%\bin\data
+	run your executable program with arg as below:
+		./c919-jig2-assy-2/c919-jig2-assy-2.obj ./c919-jig2-assy-2/res_debug1 15.0,15.0,105.0,0.1,0.5,1000
