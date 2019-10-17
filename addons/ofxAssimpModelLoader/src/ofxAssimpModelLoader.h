@@ -30,6 +30,7 @@ class ofxAssimpModelLoader{
         ofxAssimpModelLoader();
 
 		bool loadModel(std::string modelName, bool optimize=false);
+		bool saveModel(std::string modelName);
         bool loadModel(ofBuffer & buffer, bool optimize=false, const char * extension="");
         void createEmptyModel();
         void createLightsFromAiModel();

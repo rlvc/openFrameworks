@@ -46,6 +46,79 @@ bool ofxAssimpModelLoader::loadModel(string modelName, bool optimize){
     return bOk;
 }
 
+bool ofxAssimpModelLoader::saveModel(string modelName) {
+
+	if (scene.get() == nullptr) {
+		return false;
+	}
+	std::vector<glm::vec3> model_vertex = std::vector<glm::vec3>();
+	std::vector<glm::vec3> model_face = std::vector<glm::vec3>();
+	for (unsigned int index_mesh = 0; index_mesh < scene->mNumMeshes; ++index_mesh) {
+		aiMesh *mesh = scene->mMeshes[index_mesh];
+		for (unsigned int index_vertex = 0; index_vertex < mesh->mNumVertices; index_vertex++)
+		{
+			glm::vec3 vector;
+			vector.x = mesh->mVertices[index_vertex].x;
+			vector.y = mesh->mVertices[index_vertex].y;
+			vector.z = mesh->mVertices[index_vertex].z;
+			model_vertex.push_back(vector);
+		}
+		for (unsigned int index_face = 0; index_face < mesh->mNumFaces; index_face++)
+		{
+			glm::vec3 vector;
+			vector.x = mesh->mFaces[index_face].mIndices[0];
+			vector.y = mesh->mFaces[index_face].mIndices[1];
+			vector.z = mesh->mFaces[index_face].mIndices[2];
+			model_face.push_back(vector);
+		}
+	}
+	ofFile matBuffer;
+	matBuffer.open(modelName, ofFile::WriteOnly, false);
+	std::string floatString;
+	for (unsigned int index_vertex = 0; index_vertex < (unsigned int)(model_vertex.size()); index_vertex++)
+	{
+		floatString.clear();
+		floatString.append("v ");
+		floatString.append(std::to_string(model_vertex[index_vertex].x));
+		floatString.append(" ");
+		floatString.append(std::to_string(model_vertex[index_vertex].y));
+		floatString.append(" ");
+		floatString.append(std::to_string(model_vertex[index_vertex].z));
+		floatString.append(" ");
+		matBuffer << floatString;
+		matBuffer << std::endl;
+	}
+	for (unsigned int index_face = 0; index_face < (unsigned int)(model_face.size()); index_face++)
+	{
+		floatString.clear();
+		floatString.append("f ");
+		unsigned int index = (unsigned int)(model_face[index_face].x + 1);
+		floatString.append(std::to_string(index));
+		floatString.append("/");
+		floatString.append(std::to_string(index));
+		floatString.append("/");
+		floatString.append(std::to_string(index));
+		floatString.append(" ");
+		index = (unsigned int)(model_face[index_face].y + 1);
+		floatString.append(std::to_string(index));
+		floatString.append("/");
+		floatString.append(std::to_string(index));
+		floatString.append("/");
+		floatString.append(std::to_string(index));
+		floatString.append(" ");
+		index = (unsigned int)(model_face[index_face].z + 1);
+		floatString.append(std::to_string(index));
+		floatString.append("/");
+		floatString.append(std::to_string(index));
+		floatString.append("/");
+		floatString.append(std::to_string(index));
+		matBuffer << floatString;
+		matBuffer << std::endl;
+	}
+	matBuffer.close();
+	return true;
+}
+
 
 bool ofxAssimpModelLoader::loadModel(ofBuffer & buffer, bool optimize, const char * extension){
     
