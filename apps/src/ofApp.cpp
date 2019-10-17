@@ -12,13 +12,10 @@ ofApp::ofApp()
 	_objModel = nullptr;
 	_mainCamera = nullptr;
 	_frameCount = 0;
-
-    _camera_rotation_step = 10.0f;
-    _vertical_rotation_step = 15.0f;
-    _vertical_rotation_max = 105.0f;
-    _scale_step = 0.1f;
-    _scale_max = 0.6f;
-    _model_scale = 1.0f;
+	_model_scale = 1.0f;
+	n_points_ = 1500;
+	//n_points_ = 150;//_lessimage
+	n_sphere_fraction_ = 16;
 }
 
 ofApp::~ofApp()
@@ -40,13 +37,13 @@ void ofApp::setup(){
 	if (!_mainCamera) {
 		_mainCamera = new ofCamera();
 	}
-
 	_objModel->setScaleNormalization(false);
 	
 	if (!_objModel->loadModel(_inputModel, 20)) {
 		ofExit(2);
 	}
-
+	std::string model_fix_path = ofFilePath::join(_workDir, "model.obj");
+	_objModel->saveModel(model_fix_path);
 	ofFbo::Settings fboSettings;
 	fboSettings.width = ofGetWidth();
 	fboSettings.height = ofGetHeight();
@@ -69,14 +66,7 @@ void ofApp::setup(){
 
 	_mainCamera->resetTransform();
 
-
-	_mainCamera->setPosition(0.0f, 0.0f, 20.0f);
-	_mainCamera->setFov(42.5);//60
-
-	//_mainCamera->lookAt(_objModel->getSceneCenter());
-
-
-	//_objModel->setPosition(ofGetWidth() / 2, ofGetHeight() / 2, 0);
+	_mainCamera->setFov(60);//f = 579.4
 
 	_objPos = _objModel->getPosition();
 	ofLog() << "obj pos " << _objPos;
@@ -101,30 +91,24 @@ void ofApp::setup(){
 
 
 	// update camera pos around the obj
-	
-	_xRotDeg = 0.0;
-	_yRotDeg = 0.0;
-	_zRotDeg = 0.0;
-	_xRot = true;
-	_yRot = false;
-	_zRot = false;
-
-    _vertical_rotation_degree = 0.0f;
-    _horizontal_rotation_degree = 0.0f;
-    _scale_distance = 0.30f;
-    _camera_rotation_degree = 0.0f;
-    _vertical_rotation = false;
-    _horizontal_rotation = false;
-    _scale = false;
-    _camera_rotation = true;
+    CV_PI = 3.1415926f;
+    index_ = 0;
+    angle_ = 0; angle_min_ = 0; angle_max_ = 360; angle_step_ = 15;
+	radius_step_ = customer_defined_radius_ * 0.08;
+	radius_min_ = customer_defined_radius_ - 2 * radius_step_;
+	radius_max_ = customer_defined_radius_ + 2 * radius_step_;
+	radius_ = radius_min_;
+    
 
 	_pointLight.setDiffuseColor(ofColor(255.f, 255.f, 255.f));
 	_pointLight.setSpecularColor(ofColor(10.f, 10.f, 10.f));
 	_pointLight.setAmbientColor(ofColor(164.f, 164.f, 164.f));
 
 	_mainCamera->setNearClip(_objMaxAxis * 0.1);
+	//_mainCamera->setNearClip(0.1f);
 
 	_mainCamera->setFarClip(_objMaxAxis * 10);
+	//_mainCamera->setFarClip(256.0f);
 
 	ofMatrix4x4 projectMatrix = _mainCamera->getProjectionMatrix();
 	std::string projectMatrixPath = ofFilePath::join(_workDir, "colorCameraGLProjection.txt");
@@ -147,120 +131,85 @@ void ofApp::setup(){
 	floatString.append(" ");
 	floatString.append(std::to_string(_objMax.z));
 	floatString.append(" ");
-
 	matBuffer << floatString;
-
 	matBuffer << std::endl;
-
 	matBuffer.close();
 
 
+	std::string renderInfoPath = ofFilePath::join(_workDir, "render_info.txt");
+	matBuffer.open(renderInfoPath, ofFile::WriteOnly, false);
+	floatString.clear();
+	floatString.append("FOV: ");
+	floatString.append(std::to_string(_mainCamera->getFov()));
+	matBuffer << floatString;
+	matBuffer << std::endl;
+	floatString.clear();
+	floatString.append("WIDTH: ");
+	floatString.append(std::to_string(fboSettings.width));
+	matBuffer << floatString;
+	matBuffer << std::endl;
+	floatString.clear();
+	floatString.append("HEIGHT: ");
+	floatString.append(std::to_string(fboSettings.height));
+	matBuffer << floatString;
+	matBuffer << std::endl;
+	floatString.clear();
+	floatString.append("MODEL_SCALE: ");
+	floatString.append(std::to_string(_model_scale));
+	matBuffer << floatString;
+	matBuffer << std::endl;
+	matBuffer.close();
+
+	
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 
-	float xOff = _model_scale * _scale_distance * std::sinf(ofDegToRad(_vertical_rotation_degree)) * std::sinf(ofDegToRad(_horizontal_rotation_degree));//0.0f;
-	float yOff = _model_scale * _scale_distance * std::sinf(ofDegToRad(_vertical_rotation_degree)) * std::cosf(ofDegToRad(_horizontal_rotation_degree));//0.0f;
-	float zOff = _model_scale * _scale_distance * std::cosf(ofDegToRad(_vertical_rotation_degree));//0.0f;
+    float angle_rad = CV_PI * angle_  / 180.0f;
 
-	_cameraPos.x = _objCenter.x + xOff;
-	_cameraPos.y = _objCenter.y + yOff;
-	_cameraPos.z = _objCenter.z + zOff;
+    static float inc = CV_PI * (3 - sqrt(5));
+    static float off = 2.0f / float(n_points_);
+    float z = index_ * off - 1.0f + (off / 2.0f);
+    //z = -z;
+    float r = sqrt(1.0f - z * z);
+    float phi = index_ * inc;
+    float y = std::cos(phi) * r;
+    float x = std::sin(phi) * r;
+	// cv_module
+	float xOff = _model_scale * x * radius_;
+	float yOff = _model_scale * y * radius_;
+	float zOff = _model_scale * z * radius_;
 
+	
+	glm::vec3 t = glm::vec3(xOff, yOff, zOff);
+	glm::vec3 C = glR * t;// = -R * t;
+
+	_cameraPos.x = _objCenter.x + C.x;
+	_cameraPos.y = _objCenter.y + C.y;
+	_cameraPos.z = _objCenter.z + C.z;
+	_mainCamera->resetTransform();
 	_mainCamera->setPosition(_cameraPos.x, _cameraPos.y, _cameraPos.z);
 
-
-	//_mainCamera->setPosition(0.0f, 0.0f, 10.0f);
-
 	_mainCamera->lookAt(_objCenter);
-    //if(_camera_rotation){
-    _mainCamera->roll(_camera_rotation_degree);
-        //_camera_rotation_degree++;
-    //}
-	//ofPoint cameraPos = _mainCamera->getGlobalPosition();
-	//ofLog() << "camera pos " << cameraPos;
-
+    
+    _mainCamera->roll(angle_);
+	
 	_pointLight.setPosition(_cameraPos.x, _cameraPos.y, _cameraPos.z);
 
-    if(_camera_rotation){
-        _camera_rotation_degree += _camera_rotation_step;
-        if (_camera_rotation_degree >= 360.0f)
+    angle_ += angle_step_;
+    if (angle_ >= angle_max_)
+    {
+        angle_ = angle_min_;
+        radius_ += radius_step_;
+        if (radius_ > radius_max_ + radius_step_ / 2)
         {
-            _camera_rotation_degree = 0.0f;
-            _camera_rotation = false;
-            _horizontal_rotation = true;
-            _vertical_rotation = false;
-            _scale = false;
+            radius_ = radius_min_;
+            ++index_;
         }
     }
-
-    if (_horizontal_rotation) {
-        //_horizontal_rotation_degree += (15.0f + 345.0f * powf(abs(_vertical_rotation_degree - 90.0f) / 90.0f, 180.0f / (90 - abs(_vertical_rotation_degree - 90.0f) + 1.0f)));
-        //_horizontal_rotation_degree += 15.0f;
-        if (0 == _vertical_rotation_degree)
-        {
-            _horizontal_rotation_degree += 360.0f;
-        }
-        else
-        {
-            //_horizontal_rotation_degree += (_vertical_rotation_step / (1 - (abs(90.0f - _vertical_rotation_degree) / 90.0f)));
-            _horizontal_rotation_degree += _vertical_rotation_step;
-        }
-        if (_horizontal_rotation_degree >= 360.0f) {
-            cout << "horizontal change, new vertical" << endl;
-            _horizontal_rotation_degree = 0.0f;
-            _camera_rotation = false;
-            _horizontal_rotation = false;
-            _vertical_rotation = true;
-            _scale = false;
-        }
-        else
-        {
-            _camera_rotation = true;
-            _horizontal_rotation = false;
-            _vertical_rotation = false;
-            _scale = false;
-        }
-    }
-
-    if (_vertical_rotation) {
-        _vertical_rotation_degree += _vertical_rotation_step;
-        if (_vertical_rotation_degree > _vertical_rotation_max)
-        {
-            cout << "vertical change, new scale" << endl;
-            _vertical_rotation_degree = 0.0f;
-            _camera_rotation = false;
-            _horizontal_rotation = false;
-            _vertical_rotation = false;
-            _scale = true;
-        }
-        else
-        {
-            _camera_rotation = true;
-            _horizontal_rotation = false;
-            _vertical_rotation = false;
-            _scale = false;
-        }
-    }
-
-    if (_scale) {
-        _scale_distance += _scale_step;
-        cout << "_scale_distance change, new _scale_distance = " << _scale_distance << endl;
-
-            _camera_rotation = true;
-            _horizontal_rotation = false;
-            _vertical_rotation = false;
-            _scale = false;
-
-    }
-
-    if (_scale_distance > (_scale_max + 0.001f)) {
+    if (index_ >= n_points_ / n_sphere_fraction_) {
         cout << "all finished, break" << endl;
-        _camera_rotation_degree = 0.0f;
-        _horizontal_rotation_degree = 0.0f;
-        _vertical_rotation_degree = 0.0f;
-        _scale_distance = 0.0f;
         ofExit();
     }
 }
@@ -396,7 +345,7 @@ void ofApp::saveFrame()
 
 
 		//pixel[0] = (2.0 * zNear) / (zFar + zNear - value * (zFar - zNear));
-		pixel[0] = depthInCamera *1000.0f / _model_scale;
+		pixel[0] = depthInCamera;
 	}
 
 	std::string depthFile = std::to_string(_frameCount) + ".raw";
@@ -412,6 +361,7 @@ void ofApp::saveFrame()
 	ofMatrix4x4 flipY, flipZ;
 	flipY.makeRotationMatrix(180, ofVec3f(0.0f, 0.0f, 1.0f));
 	flipZ.makeRotationMatrix(180, ofVec3f(0.0f, 1.0f, 0.0f));
+	ofMatrix4x4 a = flipY * flipZ;
 
 	world2camera *= flipY * flipZ;
 
@@ -421,86 +371,6 @@ void ofApp::saveFrame()
 	std::string colorPosPath = ofFilePath::join(_workDir, "pose");
 	extrinsicFile = ofFilePath::join(colorPosPath, extrinsicFile);
 	world2camera.writeToFile(extrinsicFile);
-
-	// get camera intrinsic matrix
-	
-	glm::vec3 LookAtDir = _mainCamera->getLookAtDir();
-    glm::vec3 UpDir = _mainCamera->getUpDir();
-    glm::vec3 SideDir = _mainCamera->getSideDir();
-    float XCoords = _mainCamera->getX();
-    float YCoords = _mainCamera->getY();
-    float ZCoords = _mainCamera->getZ();
-    float TT = sqrtf(powf(XCoords, 2.0f) + powf(YCoords, 2.0f) + powf(ZCoords, 2.0f));
-    glm::vec3 XAxis = _mainCamera->getXAxis();
-    glm::vec3 YAxis = _mainCamera->getYAxis();
-    glm::vec3 ZAxis = _mainCamera->getZAxis();
-	
-    std::string viewInfoFile = std::to_string(_frameCount) + ".txt";
-    std::string  viewInfoPath = ofFilePath::join(_workDir, "view");
-    viewInfoFile = ofFilePath::join(viewInfoPath, viewInfoFile);
-    //world2camera.writeToFile(extrinsicFile);
-    ofFile matBuffer;
-    matBuffer.open(viewInfoFile, ofFile::WriteOnly, false);
-    std::string floatString;
-    floatString.append(std::to_string(XAxis.x));
-    floatString.append(" ");
-    floatString.append(std::to_string(XAxis.y));
-    floatString.append(" ");
-    floatString.append(std::to_string(XAxis.z));
-    floatString.append(" ");
-    //matBuffer << floatString;
-    //matBuffer << std::endl;
-    //floatString.clear();
-    floatString.append(std::to_string(YAxis.x));
-    floatString.append(" ");
-    floatString.append(std::to_string(YAxis.y));
-    floatString.append(" ");
-    floatString.append(std::to_string(YAxis.z));
-    floatString.append(" ");
-    //matBuffer << floatString;
-    //matBuffer << std::endl;
-    //floatString.clear();
-    floatString.append(std::to_string(ZAxis.x));
-    floatString.append(" ");
-    floatString.append(std::to_string(ZAxis.y));
-    floatString.append(" ");
-    floatString.append(std::to_string(ZAxis.z));
-    floatString.append(" ");
-    matBuffer << floatString;
-    matBuffer << std::endl;
-
-    floatString.clear();
-    floatString.append(std::to_string(SideDir.x));
-    floatString.append(" ");
-    floatString.append(std::to_string(SideDir.y));
-    floatString.append(" ");
-    floatString.append(std::to_string(SideDir.z));
-    floatString.append(" ");
-    //matBuffer << floatString;
-    //matBuffer << std::endl;
-    //floatString.clear();
-    floatString.append(std::to_string(UpDir.x));
-    floatString.append(" ");
-    floatString.append(std::to_string(UpDir.y));
-    floatString.append(" ");
-    floatString.append(std::to_string(UpDir.z));
-    floatString.append(" ");
-    //matBuffer << floatString;
-    //matBuffer << std::endl;
-    //floatString.clear();
-    floatString.append(std::to_string(LookAtDir.x));
-    floatString.append(" ");
-    floatString.append(std::to_string(LookAtDir.y));
-    floatString.append(" ");
-    floatString.append(std::to_string(LookAtDir.z));
-    floatString.append(" ");
-    matBuffer << floatString;
-    matBuffer << std::endl;
-    floatString.clear();
-    floatString.append(std::to_string(TT));
-    matBuffer << floatString;
-    matBuffer << std::endl;
-    matBuffer.close();
 
 	_frameCount++;
 }
@@ -527,20 +397,98 @@ void ofApp::setScanParam(string str_param)
         if (*p == '\0') break;
         p++;
     }
-    if (vfParam.size() == 6)
+    if (vfParam.size() >= 1)
     {
-        _camera_rotation_step = float(vfParam[0]);
-        _vertical_rotation_step = float(vfParam[1]);
-        _vertical_rotation_max = float(vfParam[2]);
-        _scale_step = float(vfParam[3]);
-        _scale_max = float(vfParam[4]);
-        _model_scale = float(vfParam[5]);
-        //_scale_distance *= _model_scale;
-        //_scale_step *= _model_scale;
-        //_scale_max *= _model_scale;
+        _model_scale = float(vfParam[0]);
     }
+	if (vfParam.size() >= 2)
+	{
+		n_points_ = (size_t)(vfParam[1]);
+	}
+	if (vfParam.size() >= 3)
+	{
+		n_sphere_fraction_ = (size_t)(vfParam[2]);
+	}
 }
 
+void ofApp::setExtrinsicsParam(string str_param)
+{
+	vector<float> vfParam;
+	const char *p = str_param.c_str();
+	while (p && *p != '\0')
+	{
+		float d = atof(p);
+		vfParam.push_back(d);
+		while (*p != ','&& *p != '\0') p++;
+		if (*p == '\0') break;
+		p++;
+	}
+	if (vfParam.size() == 16)
+	{
+		float angle_rad = CV_PI * angle_ / 180.0f;
+
+		static float inc = CV_PI * (3 - sqrt(5));
+		static float off = 2.0f / float(n_points_);
+		float z = 0 * off - 1.0f + (off / 2.0f);
+		//z = -z;
+		float r = sqrt(1.0f - z * z);
+		float phi = 0 * inc;
+		float y = std::cos(phi) * r;
+		float x = std::sin(phi) * r;
+
+		//float fext[16] = { 1.0 ,0.0, 0.0, 8.403056, 0.0, -0.036511, 0.999333, 100.035164,-0.0, -0.999333, - 0.036511, 544.574646, 0.0, 0.0, 0.0, 1.0 };
+		glm::mat4 mat4_ext;
+		mat4_ext[0][0] = vfParam[0];
+		mat4_ext[1][0] = vfParam[1];
+		mat4_ext[2][0] = vfParam[2];
+		mat4_ext[3][0] = vfParam[3];
+		mat4_ext[0][1] = vfParam[4];
+		mat4_ext[1][1] = vfParam[5];
+		mat4_ext[2][1] = vfParam[6];
+		mat4_ext[3][1] = vfParam[7];
+		mat4_ext[0][2] = vfParam[8];
+		mat4_ext[1][2] = vfParam[9];
+		mat4_ext[2][2] = vfParam[10];
+		mat4_ext[3][2] = vfParam[11];
+		mat4_ext[0][3] = vfParam[12];
+		mat4_ext[1][3] = vfParam[13];
+		mat4_ext[2][3] = vfParam[14];
+		mat4_ext[3][3] = vfParam[15];
+		ofMatrix4x4 world2camera = glm::inverse(mat4_ext);
+
+		ofMatrix4x4 flipY, flipZ;
+		flipY.makeRotationMatrix(180, ofVec3f(0.0f, 0.0f, 1.0f));
+		flipZ.makeRotationMatrix(180, ofVec3f(0.0f, 1.0f, 0.0f));
+		world2camera *= flipY * flipZ;
+		world2camera = ofMatrix4x4::getTransposedOf(world2camera);
+
+		glm::mat3 R;
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				R[i][j] = world2camera._mat[i][j];
+			}
+		}
+		glm::vec3 t = glm::vec3(world2camera._mat[0][3], world2camera._mat[1][3], world2camera._mat[2][3]);
+		glm::vec3 C = -R * t;
+		ofPoint C_norm = ofPoint(C.x - _objCenter.x, C.y - _objCenter.y, C.z - _objCenter.z);
+		customer_defined_radius_ = C_norm.length();
+		C_norm.normalize();
+		ofPoint C_ori = ofPoint(x, y, z);
+		ofLog() << "C_ori: " << C_ori;
+		ofLog() << "C_norm: " << C_norm;
+
+		glRotateMatrix.makeRotationMatrix(C_ori, C_norm);
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				glR[i][j] = glRotateMatrix._mat[i][j];
+			}
+		}
+	}
+}
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 

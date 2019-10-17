@@ -31,6 +31,7 @@ class ofApp : public ofBaseApp{
 		void setScanInput(string file);
 		void setScanOutput(string path);
         void setScanParam(string str_param);
+        void setExtrinsicsParam(string str_param);
 
     private:
 		ofxAssimpModelLoader * _objModel;
@@ -38,12 +39,21 @@ class ofApp : public ofBaseApp{
 		float _objMaxAxis;
 		ofCamera* _mainCamera;
 		ofPoint _cameraPos;
-		float _xRotDeg, _yRotDeg, _zRotDeg;
-		bool _xRot, _yRot, _zRot;
 
-        float _vertical_rotation_degree, _horizontal_rotation_degree, _scale_distance;
-        float _camera_rotation_degree;
-        bool _vertical_rotation, _horizontal_rotation, _scale, _camera_rotation;
+        /** The number of points on the sphere */
+        size_t n_points_;
+		/** The fraction of the sphere need to render */
+		size_t n_sphere_fraction_;
+        /** The index of the view point we are at now */
+        size_t index_;
+        /** Values for the angle sampling in degrees */
+        int angle_min_, angle_max_, angle_step_, angle_;
+        /** Values for the scale sampling */
+		float customer_defined_radius_;
+        float radius_min_, radius_max_, radius_step_, radius_;
+        float CV_PI;
+		ofMatrix4x4 glRotateMatrix;
+		glm::mat3 glR;
 
 		ofLight _pointLight;
 
@@ -54,8 +64,6 @@ class ofApp : public ofBaseApp{
 		std::string _inputModel;
 		std::string _workDir;
 
-        float _camera_rotation_step, _vertical_rotation_step, _scale_step;
-        float _vertical_rotation_max, _scale_max;
         float _model_scale;
 		
 };

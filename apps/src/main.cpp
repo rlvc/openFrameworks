@@ -10,7 +10,7 @@ static void Help();
 //========================================================================
 int main(int argc, char *argv[]){
 
-	if (argc < 3)
+	if (argc != 5)
 	{
 		cout << "invalid command line paramter" << endl;
 		Help();
@@ -22,20 +22,20 @@ int main(int argc, char *argv[]){
 	string inputModel = string(argv[1]);
 	string scanOutput = string(argv[2]);
 
-	ofSetupOpenGL(640,480,OF_WINDOW);			// <-------- setup the GL context
+	ofSetupOpenGL(640,480, OF_WINDOW_EGL_OS);			// <-------- setup the GL context
 
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:
 	ofApp* scanner = new ofApp();
-	scanner->setScanInput(inputModel); //"huaping-realsize_22cm_fbx/huaping-realsize_22cm_fbx.FBX")
-    if (4 == argc)
-    {
-        string inputParam = string(argv[3]);
-        scanner->setScanParam(inputParam);
-    }
-	//std::string scanOutput = ofFilePath::getCurrentWorkingDirectory();
-	//scanOutput = ofFilePath::join(scanOutput, "scan_out");
+	scanner->setScanInput(inputModel); 
+
+	string extrinsics_param = string(argv[3]);
+	scanner->setExtrinsicsParam(extrinsics_param);
+
+    string inputParam = string(argv[4]);
+    scanner->setScanParam(inputParam);
+
 	scanner->setScanOutput(scanOutput);
 	ret = ofRunApp(scanner);
 
@@ -48,10 +48,10 @@ int main(int argc, char *argv[]){
 static void Help()
 {
 	cout << endl << endl
-		<< "*********** objScanner Help ***********" << endl << endl
+		<< "*********** fealessScanner Help ***********" << endl << endl
 		<< "Usage:" << endl
-		<< "    objScanner [model_file] [output_folder]" << endl << endl;
+		<< "    fealessScanner [model_file] [output_folder] [extrinsics_param] [scan_param]" << endl << endl;
 
 	cout << endl << endl;
-	cout << "********** objScanner Help ***********" << endl << endl;
+	cout << "********** fealessScanner Help ***********" << endl << endl;
 }
