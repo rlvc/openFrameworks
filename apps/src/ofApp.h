@@ -34,11 +34,11 @@ class ofApp : public ofBaseApp{
         void setExtrinsicsParam(string str_param);
 
     private:
-		ofxAssimpModelLoader * _objModel;
-		ofPoint _objPos, _objCenter, _objMin, _objMax;
-		float _objMaxAxis;
-		ofCamera* _mainCamera;
-		ofPoint _cameraPos;
+		ofxAssimpModelLoader * obj_model_;
+		ofPoint obj_pos_, obj_center_, obj_min_, obj_max_;
+		float obj_max_axis_;
+		ofCamera* main_camera_;
+		ofPoint camera_pos_;
 
         /** The number of points on the sphere */
         size_t n_points_;
@@ -51,19 +51,20 @@ class ofApp : public ofBaseApp{
         /** Values for the scale sampling */
 		float customer_defined_radius_;
         float radius_min_, radius_max_, radius_step_, radius_;
-        float CV_PI;
-		ofMatrix4x4 glRotateMatrix;
-		glm::mat3 glR;
+        float cv_pi_;
+		glm::mat3 gl_rotate_matrix_;
 
-		ofLight _pointLight;
+		ofLight point_light_;
 
-		ofFbo _fbo_GL_RGBA;
+		ofFbo fbo_gl_rgba_;
 
-		int _frameCount;
+		int frame_count_;
 
-		std::string _inputModel;
-		std::string _workDir;
+		std::string input_model_;
+		std::string work_dir_;
+		std::string extrinsics_param_;
+		std::string input_param_;
 
-        float _model_scale;
+        float model_scale_;
 		
 };

@@ -10,7 +10,7 @@ static void Help();
 //========================================================================
 int main(int argc, char *argv[]){
 
-	if (argc != 5)
+	if (argc < 4)
 	{
 		cout << "invalid command line paramter" << endl;
 		Help();
@@ -19,24 +19,25 @@ int main(int argc, char *argv[]){
 
 	int ret = 0;
 
-	string inputModel = string(argv[1]);
-	string scanOutput = string(argv[2]);
-
 	ofSetupOpenGL(640,480, OF_WINDOW_EGL_OS);			// <-------- setup the GL context
 
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:
 	ofApp* scanner = new ofApp();
-	scanner->setScanInput(inputModel); 
 
+	string inputModel = string(argv[1]);
+	scanner->setScanInput(inputModel);
+	string scanOutput = string(argv[2]);
+	scanner->setScanOutput(scanOutput);
 	string extrinsics_param = string(argv[3]);
 	scanner->setExtrinsicsParam(extrinsics_param);
-
-    string inputParam = string(argv[4]);
-    scanner->setScanParam(inputParam);
-
-	scanner->setScanOutput(scanOutput);
+	if (argc >= 5)
+	{
+		string inputParam = string(argv[4]);
+		scanner->setScanParam(inputParam);
+	}
+    	
 	ret = ofRunApp(scanner);
 
 	return ret;
