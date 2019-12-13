@@ -54,7 +54,6 @@ void ofApp::setup(){
 	fboSettings.numSamples = 0;
 	fboSettings.depthStencilAsTexture = false;
 
-	//fbo_gl_rgba_.allocate(fboSettings);
 	fbo_gl_rgba_.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA, 0);
 
 	ofEnableDepthTest();
@@ -167,11 +166,6 @@ void ofApp::setup(){
 	matBuffer << floatString;
 	matBuffer << std::endl;
 	floatString.clear();
-	floatString.append("MODEL_SCALE: ");
-	floatString.append(std::to_string(model_scale_));
-	matBuffer << floatString;
-	matBuffer << std::endl;
-	floatString.clear();
 	floatString.append("RENDER_POINT: ");
 	floatString.append(std::to_string(n_points_));
 	matBuffer << floatString;
@@ -213,7 +207,6 @@ void ofApp::update(){
 	camera_pos_.z = obj_center_.z + C.z;
 	main_camera_->resetTransform();
 	main_camera_->setPosition(camera_pos_.x, camera_pos_.y, camera_pos_.z);
-
 	main_camera_->lookAt(obj_center_);
     
     main_camera_->roll(angle_);
@@ -240,12 +233,6 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-	//ofSetColor(ofColor(0.f, 255.f, 0.f));
-	//ofClear(0, 0, 0, 0); //
-	//fbo_gl_rgba_.begin();
-	//ofEnableDepthTest();
-	//ofBackground(0, 0, 0);
-	//main_camera_->begin();
     fbo_gl_rgba_.begin();
     ofClear(0, 0, 0, 0); //
     ofBackground(0, 0, 0);
@@ -255,18 +242,6 @@ void ofApp::draw(){
 	point_light_.enable();
 
 	obj_model_->drawFaces();
-
-	//ofDrawBox(10);
-
-	//ofDrawBox(0.0f, 0.0f, 0.0f, 2); // middle
-
-	//ofDrawBox(0.0f, 3.0f, 0.0f, 2);  // up
-
-	//ofDrawBox(-3.0f, 0.0f, 0.0f, 2);  // left
-
-	//ofDrawBox(0.0f, -4.0f, 10.0f, 2);  // bottom
-
-	//ofDrawGrid();
 
 	point_light_.disable();
 
@@ -461,6 +436,15 @@ void ofApp::setExtrinsicsParam(string str_param)
 		float y = std::cos(phi) * r;
 		float x = std::sin(phi) * r;
 
+		ofxAssimpModelLoader * obj_model = new ofxAssimpModelLoader();
+		obj_model->setScaleNormalization(false);
+
+		if (!obj_model->loadModel(input_model_, 20)) {
+			ofExit(2);
+		}
+		ofPoint obj_center = obj_model->getSceneCenter();
+		delete obj_model;
+		obj_model = nullptr;
 		//float fext[16] = { 1.0 ,0.0, 0.0, 8.403056, 0.0, -0.036511, 0.999333, 100.035164,-0.0, -0.999333, - 0.036511, 544.574646, 0.0, 0.0, 0.0, 1.0 };
 		glm::mat4 mat4_ext;
 		mat4_ext[0][0] = vfParam[0];
@@ -497,7 +481,7 @@ void ofApp::setExtrinsicsParam(string str_param)
 		}
 		glm::vec3 t = glm::vec3(world2camera._mat[0][3], world2camera._mat[1][3], world2camera._mat[2][3]);
 		glm::vec3 C = -R * t;
-		ofPoint C_norm = ofPoint(C.x - obj_center_.x, C.y - obj_center_.y, C.z - obj_center_.z);
+		ofPoint C_norm = ofPoint(C.x - obj_center.x, C.y - obj_center.y, C.z - obj_center.z);
 		customer_defined_radius_ = C_norm.length();
 		C_norm.normalize();
 		ofPoint C_ori = ofPoint(x, y, z);
